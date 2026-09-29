@@ -18,7 +18,8 @@ Don't skip ahead. Every layer is easier once the one before it is locked.
 
 ## 1. Project setup
 
-- Tempo **140**. The listings that say 136 are wrong; at 136 nothing lines up after a few bars.
+- Tempo **140.10**. That extra 0.1 matters when you line your remake up against the file: at 140.00 the song drifts
+  almost a 16th note out by the end. (Chordify's 136 is wrong; at 136 nothing lines up after a few bars.)
 - The song is tuned **+15 cents** sharp. While you're comparing, turn FL's **master pitch** up 15 cents
   so your instruments match it. Otherwise every note you find will sound slightly off.
 - Key: **G# minor**. Scale: **G# A# B C# D# E F#**. If a melody note sounds almost right but sour, you
@@ -26,12 +27,12 @@ Don't skip ahead. Every layer is easier once the one before it is locked.
 
 ## 2. Line up the grid
 
-The first downbeat is **~0.31 s** into the file, about **3 sixteenth-notes** in.
+The first downbeat is **0.375 s** into the file, about **3.5 sixteenth-notes** in. Everything before it is silence.
 
 1. Drag the WAV into the Playlist and start it at **bar 2**.
-2. Hold **Alt** (turns off snap) and drag the clip left about 3 steps, until its first kick sits on the bar 2 line.
+2. Hold **Alt** (turns off snap) and drag the clip left about 3.5 steps, until the first sound sits on the bar 2 line.
 3. Turn on the metronome and play. The **snare should hit on beat 3 of every bar**. If it lands on 1, you're
-   half a bar off. If it drifts, check the tempo is exactly 140.
+   half a bar off. If it drifts, check the tempo is exactly 140.10.
 
 ## 3. Split it into stems
 
@@ -51,9 +52,9 @@ time-stretch **Mode** to an Elastique option, and turn **TIME** up to double the
 ## 4. Snare + clap (easiest, do it first)
 
 - Solo the **drums** stem.
-- Checkpoint: **one hit per bar, on beat 3** (half-time). The analyzer found some quieter ghost hits
-  around it, so listen for extra snares just before or after beat 3 and near the start of the bar.
-- Layer a snare and a clap on the same steps. If it sounds wider than one sample, it's probably two.
+- Checkpoint: **one clap per bar, on beat 3, in every bar of the song** (half-time). It's dry: three quick
+  bursts and gone in under a tenth of a second, no reverb tail.
+- Match its tone before anything else: bright but not fizzy (strongest around 1.3 kHz), nothing boomy under 600 Hz.
 
 ## 5. Kick
 
@@ -82,9 +83,11 @@ time-stretch **Mode** to an Elastique option, and turn **TIME** up to double the
 
 - Checkpoint: across the song the 808 spends roughly **37% on E, 32% on F#, 21% on G#**. That's
   **VI → VII → i**, the "climb back to home" move. If you've got a C# or a D#, check it again.
-- **Glides:** listen for the pitch bending between notes. Turn on Mono + Porta in the 808 channel's Misc tab
-  and overlap the two notes slightly in the piano roll (see [`FL_GUIDE.md`](FL_GUIDE.md#2-808-pattern-808)).
-- Match **lengths** by ear. Does each 808 ring until the next one, or cut off early? That's half the groove.
+- **No glides, mostly.** This 808 **jumps** between notes: out of ~60 pitch changes, about one slides.
+  Turn on **Mono** in the 808 channel's Misc tab so each note cuts the last, and leave **Porta off**.
+- Match **lengths** by ear. The 808 sounds about three-quarters of the time: phrases of roughly a bar with short
+  gaps (about a 16th) between them. Those gaps are half the groove.
+- The **kick is its own layer**. It usually lands with an 808 note, but not always, and never on beat 3.
 
 ## 7. Melody / synths (hardest, take your time)
 
@@ -108,8 +111,9 @@ time-stretch **Mode** to an Elastique option, and turn **TIME** up to double the
 - High-pass the drums stem at **~6 kHz**.
 - Base: 8th notes. For rolls, set piano-roll snap to **1/6 step** (16th-note triplets) or **1/2 step**
   (32nds) and count how many hits fit in the roll.
-- Listen for rolls that **rise in pitch**. That's the note moving up in the piano roll, not a different sample.
-- Hats are quiet in this mix (the top end measures ~25 dB under the total). Keep yours quieter than feels right.
+- Checkpoint: rolls show up in about **two bars out of three**, mostly short 32nd or 16th-triplet bursts.
+  They **stay on one pitch** in this song, and the loud and soft hits are far apart in level (~21 dB), so use velocity.
+- Hats are quiet and short in this mix. Keep yours quieter than feels right.
 
 ## 9. Match the sounds
 
@@ -131,22 +135,23 @@ You can't match a sound until the notes are right, so do this last.
 2. Flip between them every 4 bars. Your ears adapt quickly, so switch often and take breaks.
 3. Go **layer by layer**: solo the drums stem against your drums, the bass stem against your 808, and so on.
    Write down the one layer that's furthest off, fix only that, and repeat.
-4. Arrangement: the song is one loop that barely changes. There's an extra layer or denser section around
-   **1:08**, and the mids drop out for the **outro at ~2:03** while the 808 keeps going (see the map in
-   [`ANALYSIS.md`](ANALYSIS.md#arrangement-map-energy-per-4-bars)).
+4. Arrangement: the beat is **one 4-bar loop that never drops a layer**. The changes you hear around **1:08**
+   (the vocal gets louder) and at **2:05** (the vocal stops, the beat plays alone to the end) are all vocal
+   (see [`ANALYSIS.md`](ANALYSIS.md#arrangement-the-beat-never-changes)). Your remake is finished when one loop matches.
 
 ## Checkpoint summary
 
 | Thing | Target |
 |---|---|
-| Tempo | 140 BPM, half-time feel |
-| Bar 1 | ~0.31 s into the file |
+| Tempo | 140.10 BPM, half-time feel |
+| Bar 1 | 0.375 s into the file |
 | Tuning | +15 cents |
 | Key / scale | G# minor: G# A# B C# D# E F# |
-| Snare | Beat 3 of every bar |
-| 808 notes | E, F#, G# (VI – VII – i) |
+| Clap | Beat 3 of every bar, dry |
+| 808 notes | E, F#, G# (VI – VII – i), jumps not glides |
+| Hats | 8ths, rolls in ~2 of 3 bars, no pitch ramps |
 | Melody focus | Leans on D# |
-| Mix | Sub loudest, top end dark and quiet |
+| Mix | −9.2 LUFS, sub loudest and mono, melody wide and far under the beat, top end dark |
 
 Stuck on a layer? `python3 analyze_reference.py song.wav` on the original and on a bounce of your remake shows
 where the two differ in tempo, key, drum placement and tonal balance.

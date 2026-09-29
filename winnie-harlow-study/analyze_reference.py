@@ -39,7 +39,7 @@ def tempo(perc):
     bpms = np.arange(80, 180, 0.05)
     score = [at(240 / b * fps) + 0.5 * at(60 / b * fps) + 0.5 * at(120 / b * fps) for b in bpms]
     best = float(bpms[int(np.argmax(score))])
-    return round(best * 2) / 2, env, hop
+    return best, env, hop
 
 
 def key(harm, cents):
@@ -84,17 +84,40 @@ def drum_grid(perc, bpm):
     # it is a 2-and-4 backbeat instead of half-time.
     shift = 8 - int(np.argmax(grids["snare"]))
     rolled = {k: np.roll(v, shift) for k, v in grids.items()}
+    snare_beats = [2]
     if rolled["snare"][0] > 0.8 * rolled["snare"][8]:
         rolled = {k: np.roll(v, 4) for k, v in rolled.items()}
         shift += 4
+        snare_beats = [1, 3]
         feel = "full-time backbeat (snare on 2 and 4)"
     else:
         feel = "half-time (one snare per bar, on beat 3)"
-    # Slot 0 of the rolled grid is the downbeat. Its first time in the file is
-    # where bar 1 starts, which is what you need to line the song up in a DAW.
-    downbeat = (first_beat - shift * step) % (16 * step)
-    return rolled, feel, downbeat
+    coarse = (first_beat - shift * step) % (16 * step)
+    return rolled, feel, downbeat(perc, bpm, coarse, snare_beats)
 
+
+def downbeat(perc, bpm, coarse, snare_beats):
+    """Where bar 1 starts, to a few ms, and the exact tempo: take the snare/clap onset
+    nearest each expected backbeat and fit a straight line through them
+    (slope = bar length, offset = bar 1). Onset peaks land ~4 ms after the hit starts."""
+    band = signal.sosfiltfilt(signal.butter(4, [1000, 4000], "bandpass", fs=SR, output="sos"), perc)
+    env = librosa.onset.onset_strength(y=band, sr=SR, hop_length=64)
+    on = librosa.onset.onset_detect(onset_envelope=env, sr=SR, units="time", hop_length=64) - 0.004
+    strength = np.interp(on, librosa.frames_to_time(np.arange(len(env)), sr=SR, hop_length=64), env)
+    bar, phase = 240 / bpm, coarse
+    for window in (0.06, 0.02):
+        pos, times, weight = [], [], []
+        for k in range(int(on[-1] / bar) + 2):
+            for b in snare_beats:
+                near = np.abs(on - (phase + (k + b / 4) * bar)) < window
+                if near.any():
+                    j = np.argmax(np.where(near, strength, -1))
+                    pos.append(k + b / 4)
+                    times.append(on[j])
+                    weight.append(strength[j])
+        bar, phase = np.polyfit(pos, times, 1, w=np.sqrt(weight))
+    phase %= bar
+    return (phase - bar if phase > bar - 0.02 else phase), 240 / bar   # a hair before 0 is 0
 
 def energy_map(y, seconds):
     S = np.abs(librosa.stft(y, n_fft=4096, hop_length=1024))
@@ -119,19 +142,21 @@ def main():
     y, _ = librosa.load(args.audio, sr=SR, mono=True)
     harm, perc = librosa.effects.hpss(y, margin=2.0)
     cents = 100 * librosa.estimate_tuning(y=harm, sr=SR)
-    bpm, _, _ = tempo(perc)
+    precise_bpm, _, _ = tempo(perc)
+    bpm = round(precise_bpm * 2) / 2
     fits, ranked = key(harm, cents)
-    grids, feel, downbeat = drum_grid(perc, bpm)
+    grids, feel, (bar1, precise_bpm) = drum_grid(perc, precise_bpm)
     bar_s = 240 / bpm
 
     print(f"duration   {len(y) / SR // 60:.0f}:{len(y) / SR % 60:04.1f}")
-    print(f"tempo      {bpm:g} BPM  (feels like {bpm / 2:g} if the snare is half-time)")
+    print(f"tempo      {bpm:g} BPM  (feels like {bpm / 2:g} if the snare is half-time; "
+          f"{precise_bpm:.2f} to line up with the file over a whole song)")
     print(f"tuning     {cents:+.0f} cents from A440")
     print("key        " + ", ".join(f"{name} ({r:.2f})" for r, name in fits))
     print(f"strongest  {' '.join(ranked[:7])}   <- confirm the key by ear against these")
     print("808/bass   " + "  ".join(f"{n} {s:.0%}" for n, s in bass_notes(harm, cents))
           + "   <- the key's root is usually one of these")
-    print(f"bar 1      starts {downbeat:.2f}s into the file ({downbeat / (15 / bpm):.1f} sixteenths)"
+    print(f"bar 1      starts {max(0.0, bar1):.3f}s into the file ({max(0.0, bar1) / (15 / bpm):.1f} sixteenths)"
           "   <- slide the audio this far left in your DAW so bars line up")
     print(f"\ndrum feel  {feel}")
     print("           1 . . . 2 . . . 3 . . . 4 . . .")

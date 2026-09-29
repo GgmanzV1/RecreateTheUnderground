@@ -1,88 +1,93 @@
 # Nettspend – "Winnie Harlow": what's under the hood
 
-Measured from the WAV you uploaded (2:17, 44.1 kHz stereo) with `analyze_reference.py`
-plus a few one-off checks. Nothing here copies the song's melodies, lyrics or
-note-by-note parts. It's the framework you need to make beats in this style.
+Measured from the WAV you uploaded (2:17, 44.1 kHz stereo) with `analyze_reference.py` and the deeper
+measurements behind the full study in [`../reports/Winnie Harlow production study.md`](../reports/Winnie%20Harlow%20production%20study.md).
+Nothing here copies the song's melodies, lyrics or note-by-note parts. It's the framework and the sound targets.
 
 ## Credits and release info
 
 | | |
 |---|---|
-| Released | Dec 14, 2024 (Audiomack upload date) |
-| Producer | Audiomack lists **"ok"**; another listing credits **KwickedOnAllPlats** (unconfirmed) |
-| Listed BPM / key online | 136 BPM, G# minor |
+| Producer | **ok** (wegonebeok, credited as William Dale Minnix III), Nettspend's main producer: about 10 of the 15 tracks on *Bad Ass F\*cking Kid*, plus "Nothing Like Uuu" and "F\*ck Swag" |
+| Release | Official: track 16, a bonus on the webstore-only "Winnie Version" of *Bad Ass F\*cking Kid* (Dec 2024). Not on streaming services. The SoundCloud/Audiomack "archive" copies are fan re-uploads from Dec 12 and 14, 2024 |
+| "KwickedOnAllPlats" | Not a credit. It's the bio text of a small TikTok remake account that search summaries mistook for a producer |
+| Listed BPM / key | Chordify: 136 BPM, G# minor. The key is right; the tempo is a machine-estimate miss |
 
 ## The numbers
 
 | What | Measured | Why it matters in FL |
 |---|---|---|
-| Tempo | **140 BPM** (bar-length autocorrelation locks on at 140.1) | The 136 listed online is wrong. Set FL to 140. |
-| Feel | **Half-time**: one snare per bar, on beat 3 | Counts like 70 BPM, so it sounds slow and heavy even though the hats move at 140. |
-| Key | **G# minor** | Matches the online listing. The full-mix key guess says E major because the 808 sits on E so much, but the synths between 200 Hz and 4 kHz fit **G# natural minor** (lots of A#, very little A). |
-| Bar 1 | Starts **~0.31 s** into the file (~3 sixteenths) | Slide the clip left this much in the Playlist so the song lines up with FL's grid. |
-| Tuning | **+15 cents** sharp of A440 | When you A/B your beat against the song in FL, turn the master pitch up ~15 cents or everything will sound slightly off. |
-| Harmony | The 808 spends ~37% of the time on **E**, ~32% on **F#**, ~21% on **G#** | That's **VI – VII – i** in G# minor, the "rising into the home note" move this style lives on. The upper synths lean on **D#** (the 5th). |
-| Tonal balance | Sub (20–80 Hz) carries the most energy; the top end (8 kHz+) is ~25 dB below the total | It's a **dark, bass-first** mix. Bright, crispy hats and melodies would sound wrong here. |
-| 808 | Sub level is flat from 0:00 to the end | The 808 **never leaves**. There are no long 808-free sections. |
+| Tempo | **140.10 BPM** | Build at 140. When you A/B against the file, set FL to **140.10**, or it drifts ~0.1 s (almost a 16th) by the end. |
+| Feel | **Half-time**: the clap is on beat 3 of every bar | Counts like 70 BPM, so it sounds slow and heavy even though the hats move at 140. |
+| Bar 1 | **0.375 s** into the file (~3.5 sixteenths), right after the silence | Slide the clip left this much so the song sits on FL's grid. |
+| Key | **G# natural minor** | The synths between 200 Hz and 4 kHz use A#, not A. A full-mix key guess says E major only because the 808 sits on E so much. |
+| Tuning | **+15 cents** sharp (A ≈ 443.8 Hz) | Turn FL's master pitch up 15 cents while you compare. It's in the sounds themselves, not from a sped-up upload. |
+| Harmony | The 808 spends ~37% of the time on **E**, ~32% on **F#**, ~21% on **G#** | **VI – VII – i** in G# minor, the "rising into the home note" move. |
+| Loudness | **−9.2 LUFS**, crest ~10 dB, loudness range 1.1 LU | Loud and flat. Soft clipper then limiter on the master, ceiling −1 dBTP. |
+| Stereo | **Mono below 80 Hz**; the 808's harmonics (80–250 Hz) are partly wide; the melody is very wide; drums and vocal are mono | Keep the sub mono, the drums centered, and spread the melody. |
+| Top end | Rolled off above 8 kHz, and cut completely at **~16 kHz** | Part of the "dark" top end is dark mixing. The 16 kHz wall is the ~128 kbps file you have, so don't copy it into your master. |
 
-## Arrangement map (energy per 4 bars)
+## The sounds
 
-The track is essentially **one loop that runs the whole song**. The sub and low-mid
-bands barely move (within ~0.5 dB) from start to finish. The changes come from parts
-being added or muted on top:
-
-| Time | What the energy does |
+| Part | What it measures as |
 |---|---|
-| 0:00 | Beat is in almost immediately, no long intro |
-| 0:00 – 2:00 | Flat, steady energy: vocals carry the variation, not the beat |
-| ~1:08 | One 4-bar window with ~2 dB more mid-range: an extra layer or denser vocals |
-| ~2:03 | Outro: mids drop ~4 dB and highs ~3 dB, but the 808 keeps going |
-| 2:17 | Ends without a long fade |
+| **808** | Fundamental ~41–54 Hz. **Flat sustain**, moderately saturated: harmonics 2–5 at −15 / −6 / −16 / −28 dB below the fundamental. Sounds ~77% of the time, in phrases with short (~190 ms) gaps. **It jumps between notes**: only about one audible glide in the whole song. |
+| **Kick** | Its own layer, not a copy of the 808's rhythm. ~2.4 per bar, never on beat 3. Short (130–150 ms), dark, sweeping ~250 Hz down to a 55–60 Hz body in ~80 ms. Peaks 8–10 dB above the 808's sustain. |
+| **Clap** | Beat 3 of every bar. Three bursts ~12 ms apart, peak ~1.3 kHz, almost nothing under 600 Hz. **Dry**: −20 dB in ~40–50 ms, −40 dB by ~75 ms. |
+| **Hats** | 8th-note base, ~11–12 hits per bar. Rolls (mostly 32nds and 16th-triplets) in about **two bars out of three**. Energy peaks ~6.3 kHz, very short decay (~37 ms), ~21 dB between the loudest and softest hit. **No pitched rolls.** |
+| **Melody** | One chordal layer looping every 4 bars, energy centered around 1–2.5 kHz. Soft ~46 ms attack, a short 0.4–0.7 s ambience, no ducking, almost no pitch wobble. Sits far under the beat (~13 LU). |
+| **Vocal** | Hard-tuned to G# minor at the song's +15-cent tuning, mono, with a faint tail. |
 
-**Lesson:** underground beats like this don't need big drops or builds. A strong
-8-bar loop plus small mute tricks (drop the 808 for a bar, strip to hats before a
-section) is the whole arrangement.
+## Arrangement: the beat never changes
 
-## Style conventions (genre knowledge, not measured from this file)
+The beat is **one 4-bar loop played 20 times**. No drum, 808 or melody layer ever drops out. Every change you
+hear comes from the vocal:
 
-These are the standard moves in this lane of underground rap. Use them as a checklist:
+| Bars | Time | What changes |
+|---|---|---|
+| 1 | 0:00.4 | Everything starts at once |
+| 41–43 | ~1:08 | The vocal gets louder |
+| 51–52, 55–56 | ~1:26, ~1:33 | Short vocal gaps |
+| 74–80 | 2:05–2:17 | Vocal gone, beat alone, then a hard cut |
 
-- **808:** long, distorted/saturated so it's audible on phone speakers, with **glides** (portamento) between notes. Kicks usually hit on the same notes as the 808.
-- **Hats:** 8th-note base with **triplet and 32nd-note rolls**, sometimes pitched up during the roll.
-- **Melody:** simple, repetitive motifs on bells, plucks or airy synths, drowned in **reverb and delay** so they feel washed out and far away.
-- **Space:** mid-range left open for the vocals. That's why the mix measures dark.
-- **Lo-fi texture:** bitcrushing, detune and pitch wobble are common on the melodic layers.
+**Lesson:** in this lane the beat is a strong loop that the rapper arranges. As a producer, get the loop and
+the sounds right first. For an instrumental with no vocal, add small changes (an intro, dropping the lead in
+the verse, one 808 stop), but don't overdo it.
+
+## Style conventions vs. this song
+
+The genre playbook (see the report's playbook section) says: distorted 808s with glides, pitched hat rolls,
+melodies washed in reverb and delay, lo-fi textures, sidechained pads. **This song skips most of that.** The 808
+jumps instead of gliding, the rolls stay on one pitch, the reverb is short, there's no measurable wobble, and nothing ducks.
+Treat those moves as options, not requirements.
 
 ## How Glasshouse (the beat in this folder) compares
 
+Glasshouse keeps its own chords, melody and drum patterns. Its sound and mix are built to the targets above:
+
 | | Winnie Harlow | Glasshouse |
 |---|---|---|
-| Tempo / feel | 140, half-time | 140, half-time ✔ |
-| Key | G# minor | G# minor ✔ |
-| Harmony | VI – VII – i home notes | i – VI – iv – v (original progression) |
-| Melody | – | Original 3-3-2 syncopated bell motif |
-| Drums | – | Original pattern built on the same conventions |
-| Tonal balance | Dark, sub-first | Matched within ~0.6 dB from sub to highs (top 8 kHz+ is ~3.5 dB brighter) |
-| Arrangement | One loop, mute-based changes | One loop, mute-based changes ✔ |
-
-Want Glasshouse closer to the vibe? Change `CHORDS` in `build_beat.py` to sit on
-VI – VII – i (E, F#, G#). That's one of the most common moves in the genre and
-is yours to use.
+| Tempo / feel / key | 140.10, half-time, G# minor | 140, half-time, G# minor |
+| Loudness / peak / crest | −9.2 LUFS / +0.4 dBTP (lossy file) / 10.5 dB | −9.4 LUFS / −1.0 dBTP / 9.6 dB |
+| Stereo correlation: below 80 Hz / 80–250 Hz | 0.98 / 0.83 | 1.00 / 0.89 |
+| 808 harmonics 2–5 | −15 / −6 / −16 / −28 dB | −15.0 / −5.5 / −15.7 / −28.1 dB |
+| 808 glides | ~1 in the song | 1 per 8-bar loop |
+| Kick punch over the 808 (same method on both) | 6.9 dB | 7.4 dB |
+| Clap peak / centroid / −40 dB | 1.3 kHz / 2.5 kHz / ~75 ms | 1.5 kHz / 2.6 kHz / 81 ms |
+| Hat energy peak / −20 dB decay | 6.3 kHz / 37 ms | 5.9 kHz / 32 ms |
+| Hat rolls | ~2 bars in 3, no pitch ramps | 5 bars in 8, no pitch ramps |
+| Harmony | VI – VII – i | i – VI – iv – v (its own) |
+| Arrangement | one loop, vocal makes the changes | 4-bar intro, lead drops in the verse, one 808 stop, melody-only outro |
 
 ## Check it yourself in FL (this is the skill to practise)
 
-1. Drag the song into the **Playlist**, set the project to **140 BPM**, and turn off stretching so it plays at its real speed. If the bars line up with the grid, the tempo's right.
+1. Drag the song into the **Playlist**, set the project to **140.10 BPM**, and turn off stretching so it plays at its real speed.
+   Start the clip at bar 2 and slide it left 0.375 s (Alt-drag) so its first beat sits on the bar line.
 2. Put **Fruity Parametric EQ 2** on the song's mixer track and solo bands:
    - Low-pass at ~120 Hz → you hear only the 808/kick. Hum the notes and find them on your keyboard.
    - High-pass at ~6 kHz → only hats and air. Count the rolls.
-   - Band-pass 1.5–4 kHz → snare/clap. Count where it lands in the bar.
+   - Band-pass 1–2 kHz → the clap. Count where it lands in the bar.
 3. Loop 4 bars (select them in the Playlist timeline) and play along on the piano roll's preview keyboard until your notes match.
 4. Use a tuner plugin on the low-passed track to confirm the 808 notes. Remember the song is +15 cents sharp.
-5. Drop **markers** at each change you hear to build your own arrangement map.
-6. For a second opinion, run `python3 analyze_reference.py song.wav` on any track you own.
-
-## Sources
-
-- [Audiomack – winnie harlow by nettspend](https://audiomack.com/bloodcore-1/song/winnie-harlow)
-- [Chordify – Nettspend: Winnie Harlow](https://chordify.net/chords/nettspend-winnie-harlow-bafk) (page blocked automated access, not used for any numbers)
-- [TikTok – Winnie Harlow Nettspend Instrumental](https://www.tiktok.com/discover/winnie-harlow-nettspend-instrumental)
+5. For a second opinion, run `python3 analyze_reference.py song.wav` on any track you own. It prints the tempo,
+   where bar 1 starts, the key, the 808's notes, an averaged drum grid and an energy map.

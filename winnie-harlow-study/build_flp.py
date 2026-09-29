@@ -23,7 +23,6 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-from scipy import signal
 
 import build_beat as bb
 
@@ -45,11 +44,12 @@ CHANNELS = [
     ("openhat", "Open Hat", 60),
     ("perc", "Rim", 60),
     ("pad", "Pad", 60),
-    ("lead", "Bell Lead", 81),
+    ("lead", "Bell Lead", 69),
     ("arp", "Glass Arp", 72),
-    ("riser", "Riser", 60),
+    ("fx", "Zap", 60),
 ]
 CH = {part: i for i, (part, _, _) in enumerate(CHANNELS)}
+CHANNELS_BY_PART = [(part, name) for part, name, _ in CHANNELS]
 ROOT = {part: root for part, _, root in CHANNELS}
 MIX_BUS = {"clap": "snare", "hat": "hats", "openhat": "hats"}   # parts sharing a bus in build_beat.MIX
 
@@ -62,8 +62,7 @@ GROUPS = [
     ("Arp", "Arp", ["arp"]),
 ]
 FX_TRACK = "FX"
-VARIANT_NAMES = {frozenset({"snare", "clap", "hat", "openhat", "perc"}): "Drums (no kick)",
-                 frozenset({"hat"}): "Hats only"}
+VARIANT_NAMES = {frozenset({"snare", "clap", "hat", "openhat", "perc"}): "Drums (no kick)"}
 
 # Sampler volume envelope for parts whose sound must stop when the note ends.
 # Without it FL's Sampler plays the whole sample regardless of note length.
@@ -93,45 +92,23 @@ def fade_out(x, seconds=0.05):
     return x
 
 
-def one_808(pitch, seconds=3.0):
-    n = int(seconds * SR)
-    t = np.arange(n) / SR
-    f = bb.hz(pitch) * (1 + 0.5 * np.exp(-t / 0.012))
-    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 1.6)
-    x[: int(0.003 * SR)] *= np.linspace(0, 1, int(0.003 * SR))
-    y = 0.55 * x + 0.45 * np.tanh(3.0 * x) / np.tanh(3.0)
-    return fade_out(bb.filt(y, "lowpass", 4000))
-
-
-def riser():
-    dur = 32 * bb.STEP
-    m = int(dur * SR)
-    f, t, z = signal.stft(bb.noise(m), fs=SR, nperseg=2048)
-    center = 400 * (9000 / 400) ** (t / dur)
-    mask = np.exp(-0.5 * (np.log2((f[:, None] + 1) / center[None, :]) / 0.6) ** 2)
-    _, x = signal.istft(z * mask * (t / dur) ** 2, fs=SR, nperseg=2048)
-    return bb.reverb(padded(x[:m], 2.0), 0.5)
-
-
 def render_samples():
-    """Dry drums; the pad, bell, arp and riser keep the reverb the preview gives them."""
-    f_lead = bb.hz(ROOT["lead"])
-    lead = np.stack([bb.bell(f_lead, 127), bb.bell(f_lead * 2 ** (6 / 1200), 127)], axis=1)
-    lead = bb.reverb(padded(bb.filt(lead, "highpass", 200), 2.0), 0.32)
-    arp = bb.filt(bb.bitcrush(stereo(bb.glass(bb.hz(ROOT["arp"]), 127))), "highpass", 500)
-    pad = bb.reverb(bb.filt(bb.pad_note(ROOT["pad"], 8.0, 127), "lowpass", 2600), 0.4)
+    """Dry, mono drums; the melodic layers and FX keep the short room build_beat gives them."""
+    lead = bb.filt(bb.wide_bell(bb.hz(ROOT["lead"]), 127), "highpass", 200)
+    arp = bb.filt(stereo(bb.glass(bb.hz(ROOT["arp"]), 127)), "highpass", 500)
+    pad = bb.filt(bb.pad_note(ROOT["pad"], 8.0, 127), "lowpass", 4000)
     return {
         "kick": bb.kick(127),
-        "808": one_808(ROOT["808"]),
+        "808": fade_out(bb.one_808(ROOT["808"])),
         "snare": bb.snare(127),
         "clap": 0.8 * bb.clap(127),
         "hat": bb.HAT,
         "openhat": bb.OPEN_HAT,
         "perc": bb.rim(127),
-        "pad": fade_out(pad),
-        "lead": fade_out(lead),
-        "arp": fade_out(bb.reverb(padded(arp, 2.0), 0.5)),
-        "riser": fade_out(riser()),
+        "pad": fade_out(bb.reverb(padded(pad, 0.5), 0.35)),
+        "lead": fade_out(bb.reverb(padded(lead, 1.0), 0.4)),
+        "arp": fade_out(bb.reverb(padded(arp, 1.0), 0.4)),
+        "fx": fade_out(bb.reverb(padded(bb.zap(127), 1.0), 0.3)),
     }
 
 
@@ -259,7 +236,7 @@ def channel_block(iid, part, name, sampler, wrapper):
         elif eid == 196:
             data = text(f"Glasshouse {name}.wav")  # FL finds it next to the .flp or in a search folder
         elif eid == 221 and part == "808":
-            data = struct.pack("<IIB", 0, 500, 3)  # Mono + Porta, default slide
+            data = struct.pack("<IIB", 0, 500, 1)  # Mono: each note cuts the last, no glide
         elif eid == 132 and part in ("hat", "openhat"):
             data = struct.pack("<HH", 1, 1)        # cut group 1: the closed hat chokes the open hat
         events.append((eid, data))
@@ -308,7 +285,6 @@ def build_arrangement(loops):
     # Main loops first so they sit at the top of FL's pattern list; variations follow.
     for _, pname, parts in GROUPS:
         pattern(pname, loop_notes(parts))
-    riser = pattern("Riser", [(0, CH["riser"], 32 * TICKS_PER_STEP, bb.DRUM_NOTE, 100)])
 
     for track, (_, pname, parts) in enumerate(GROUPS):
         full = pattern(pname, None)
@@ -333,11 +309,11 @@ def build_arrangement(loops):
                     clips.append((bar, 1, pattern(name, loop_notes(on, lb)), track, 0))
                 bar += 1
 
-    fx = len(GROUPS)
-    clips.append((6, 2, riser, fx, 0))
-    hit = pattern("Outro hit", [(0, CH["kick"], TICKS_PER_STEP, bb.DRUM_NOTE, 120),
-                                (0, CH["808"], 16 * TICKS_PER_STEP, bb.CHORDS[0][0], 120)])
-    clips.append((56, 1, hit, fx, 0))
+    # One-off hits (build_beat.EXTRAS) go on their own track, one 1-bar pattern per sound.
+    for part, bar, pitch, length, vel in bb.EXTRAS:
+        name = dict(CHANNELS_BY_PART)[part]
+        pat = pattern(name, [(0, CH[part], length * TICKS_PER_STEP, pitch, vel)])
+        clips.append((bar, 1, pat, len(GROUPS), 0))
     return patterns, clips
 
 
