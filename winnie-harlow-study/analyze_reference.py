@@ -86,10 +86,14 @@ def drum_grid(perc, bpm):
     rolled = {k: np.roll(v, shift) for k, v in grids.items()}
     if rolled["snare"][0] > 0.8 * rolled["snare"][8]:
         rolled = {k: np.roll(v, 4) for k, v in rolled.items()}
+        shift += 4
         feel = "full-time backbeat (snare on 2 and 4)"
     else:
         feel = "half-time (one snare per bar, on beat 3)"
-    return rolled, feel
+    # Slot 0 of the rolled grid is the downbeat. Its first time in the file is
+    # where bar 1 starts, which is what you need to line the song up in a DAW.
+    downbeat = (first_beat - shift * step) % (16 * step)
+    return rolled, feel, downbeat
 
 
 def energy_map(y, seconds):
@@ -117,7 +121,7 @@ def main():
     cents = 100 * librosa.estimate_tuning(y=harm, sr=SR)
     bpm, _, _ = tempo(perc)
     fits, ranked = key(harm, cents)
-    grids, feel = drum_grid(perc, bpm)
+    grids, feel, downbeat = drum_grid(perc, bpm)
     bar_s = 240 / bpm
 
     print(f"duration   {len(y) / SR // 60:.0f}:{len(y) / SR % 60:04.1f}")
@@ -127,6 +131,8 @@ def main():
     print(f"strongest  {' '.join(ranked[:7])}   <- confirm the key by ear against these")
     print("808/bass   " + "  ".join(f"{n} {s:.0%}" for n, s in bass_notes(harm, cents))
           + "   <- the key's root is usually one of these")
+    print(f"bar 1      starts {downbeat:.2f}s into the file ({downbeat / (15 / bpm):.1f} sixteenths)"
+          "   <- slide the audio this far left in your DAW so bars line up")
     print(f"\ndrum feel  {feel}")
     print("           1 . . . 2 . . . 3 . . . 4 . . .")
     for name, g in grids.items():

@@ -18,7 +18,8 @@ note-by-note parts. It's the framework you need to make beats in this style.
 |---|---|---|
 | Tempo | **140 BPM** (bar-length autocorrelation locks on at 140.1) | The 136 listed online is wrong. Set FL to 140. |
 | Feel | **Half-time**: one snare per bar, on beat 3 | Counts like 70 BPM, so it sounds slow and heavy even though the hats move at 140. |
-| Key | **G# minor** | Matches the online listing. |
+| Key | **G# minor** | Matches the online listing. The full-mix key guess says E major because the 808 sits on E so much, but the synths between 200 Hz and 4 kHz fit **G# natural minor** (lots of A#, very little A). |
+| Bar 1 | Starts **~0.31 s** into the file (~3 sixteenths) | Slide the clip left this much in the Playlist so the song lines up with FL's grid. |
 | Tuning | **+15 cents** sharp of A440 | When you A/B your beat against the song in FL, turn the master pitch up ~15 cents or everything will sound slightly off. |
 | Harmony | The 808 spends ~37% of the time on **E**, ~32% on **F#**, ~21% on **G#** | That's **VI – VII – i** in G# minor, the "rising into the home note" move this style lives on. The upper synths lean on **D#** (the 5th). |
 | Tonal balance | Sub (20–80 Hz) carries the most energy; the top end (8 kHz+) is ~25 dB below the total | It's a **dark, bass-first** mix. Bright, crispy hats and melodies would sound wrong here. |
