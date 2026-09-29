@@ -8,6 +8,33 @@ Listen to `audio/glasshouse_preview.mp3` first so you know what you're aiming fo
 > **Note names:** FL calls middle C "C5" (standard is C4), so every note in FL
 > reads one octave higher than in `build_beat.py`. The 808's G#1 shows as G#2 in FL.
 
+## Shortcut: open the ready-made project
+
+`fl_project/` has **`Glasshouse.flp`** plus one WAV per channel. It's the whole beat, already laid out:
+
+1. Download the entire `fl_project` folder and keep the WAVs **in the same folder** as the `.flp`.
+2. In FL: **Options → File settings → Browser extra search folders**, add that folder. You only do this once.
+   It's how FL finds the samples wherever you saved them.
+3. Open `Glasshouse.flp`. If a channel comes up empty, drag its WAV (`Glasshouse Kick.wav` → Kick, etc.)
+   from the folder onto the channel.
+
+What's inside:
+
+- **Channels** (all Samplers, no third-party plugins): Kick, 808, Snare, Clap, Hat, Open Hat, Rim, Pad,
+  Bell Lead, Glass Arp, Riser. Each channel is routed to its own named mixer insert.
+- Already set: 140 BPM, 808 **Mono + Porta** for glides, Hat and Open Hat in the same **cut group**,
+  and the volume envelope on the 808 and Pad so they stop when the note ends.
+- **Patterns:** Drums, 808, Chords, Lead, Arp, Riser, plus the variations *Drums (no kick)*, *Hats only* and *Outro hit*.
+- **Playlist:** the full 64-bar arrangement from section 7, on tracks named Drums / 808 / Chords / Lead / Arp / FX.
+- The Pad, Bell Lead, Glass Arp and Riser samples have reverb printed in. The drums are dry.
+
+Not included, because it depends on plugin settings: the mixer effects (808 distortion, lead delay, sidechain,
+the intro filter sweep, master limiter). Add them with sections 2–8 below. That's the part worth practising.
+Swapping the samples for your own sounds (drag a new WAV onto a channel) is the fastest way to make it yours.
+
+It was built for **FL Studio 20.8 or newer** by `build_flp.py`, not saved from FL itself, so if your FL
+won't open it, use the MIDI route below and let me know what error you got.
+
 ## 0. Project setup
 
 - Tempo **140**, time signature 4/4.
