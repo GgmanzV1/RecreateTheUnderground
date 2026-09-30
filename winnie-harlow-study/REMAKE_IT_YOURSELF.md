@@ -153,5 +153,5 @@ You can't match a sound until the notes are right, so do this last.
 | Melody focus | Leans on D# |
 | Mix | −9.2 LUFS, sub loudest and mono, melody wide and far under the beat, top end dark |
 
-Stuck on a layer? `python3 analyze_reference.py song.wav` on the original and on a bounce of your remake shows
+Stuck on a layer? `python3 tools/analyze_reference.py song.wav` (from the repo root) on the original and on a bounce of your remake shows
 where the two differ in tempo, key, drum placement and tonal balance.

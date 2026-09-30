@@ -17,14 +17,14 @@ The full research (credits, release history, ok's toolkit, the style's playbook,
 | `midi/loops/*.mid` | One 8-bar loop per part, drag into FL's piano roll |
 | `midi/glasshouse_arrangement.mid` | All parts over the full 64 bars (File → Import → MIDI file) |
 | `build_beat.py` | Generates the MIDI and preview. Edit `CHORDS`, `LEAD_NOTES`, patterns or `MIX` and re-run |
-| `build_flp.py` | Generates the FL project and its samples from the same parts as `build_beat.py`. Uses the FL-saved files in `fl_template/` |
-| `analyze_reference.py` | Measures tempo, feel, key, 808 notes, tuning, where bar 1 starts, and arrangement of any track you own |
+| [`../tools/build_flp.py`](../tools/build_flp.py) | Generates the FL project and its samples from `build_beat.py` (its `FL_PROJECT` settings). Shared by every study |
+| [`../tools/analyze_reference.py`](../tools/analyze_reference.py) | Measures tempo, feel, key, 808 notes, tuning, where bar 1 starts, and arrangement of any track you own |
 
 ## Quick start
 
 ```bash
-pip install numpy scipy soundfile mido librosa
+pip install numpy scipy soundfile mido librosa pyloudnorm
 python3 build_beat.py --wav                 # rebuild MIDI + preview (WAV too)
-python3 build_flp.py                        # rebuild the FL project + samples
-python3 analyze_reference.py some_song.wav  # study another reference
+python3 ../tools/build_flp.py build_beat.py           # rebuild the FL project + samples
+python3 ../tools/analyze_reference.py some_song.wav   # study another reference
 ```

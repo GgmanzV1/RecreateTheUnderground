@@ -544,6 +544,82 @@ def render(song, stems_dir=None):
     return mix
 
 
+# ---------------------------------------------------------------------------
+# FL Studio project (tools/build_flp.py reads this)
+# ---------------------------------------------------------------------------
+
+def stereo(x):
+    return np.stack([x, x], axis=1) if x.ndim == 1 else x
+
+
+def padded(x, seconds):
+    return np.concatenate([stereo(x), np.zeros((int(seconds * SR), 2))])
+
+
+def fade_out(x, seconds=0.05):
+    n = int(seconds * SR)
+    x = x.copy()
+    x[-n:] *= np.linspace(1, 0, n)[:, None] if x.ndim == 2 else np.linspace(1, 0, n)
+    return x
+
+
+# (part, channel name, sample root note). FL names MIDI 60 "C5".
+FL_CHANNELS = [
+    ("kick", "Kick", 60), ("808", "808", 36), ("snare", "Snare", 60), ("clap", "Clap", 60),
+    ("hat", "Hat", 60), ("openhat", "Open Hat", 60), ("perc", "Rim", 60), ("pad", "Pad", 60),
+    ("lead", "Bell Lead", 69), ("arp", "Glass Arp", 72), ("fx", "Zap", 60),
+]
+FL_ROOT = {part: root for part, _, root in FL_CHANNELS}
+
+
+def fl_samples():
+    """One sample per channel. Dry, mono drums; the melodic layers and FX keep their short room."""
+    lead = filt(wide_bell(hz(FL_ROOT["lead"]), 127), "highpass", 200)
+    arp = filt(stereo(glass(hz(FL_ROOT["arp"]), 127)), "highpass", 500)
+    pad = filt(pad_note(FL_ROOT["pad"], 8.0, 127), "lowpass", 4000)
+    return {
+        "kick": kick(127),
+        "808": fade_out(one_808(FL_ROOT["808"])),
+        "snare": snare(127),
+        "clap": 0.8 * clap(127),
+        "hat": HAT,
+        "openhat": OPEN_HAT,
+        "perc": rim(127),
+        "pad": fade_out(reverb(padded(pad, 0.5), 0.35)),
+        "lead": fade_out(reverb(padded(lead, 1.0), 0.4)),
+        "arp": fade_out(reverb(padded(arp, 1.0), 0.4)),
+        "fx": fade_out(reverb(padded(zap(127), 1.0), 0.3)),
+    }
+
+
+FL_PROJECT = dict(
+    name="Glasshouse",
+    genre="Underground rap",
+    comment=("Glasshouse: an original 140 BPM beat from the Winnie Harlow style study. "
+             "Keep the Glasshouse *.wav samples in the same folder as this project."),
+    channels=FL_CHANNELS,
+    # Playlist tracks: (track name, pattern name, parts). One 8-bar pattern each.
+    groups=[
+        ("Drums", "Drums", ["kick", "snare", "clap", "hat", "openhat", "perc"]),
+        ("808", "808", ["808"]),
+        ("Chords", "Chords", ["pad"]),
+        ("Lead", "Lead", ["lead"]),
+        ("Arp", "Arp", ["arp"]),
+    ],
+    fx_track="FX",
+    variants={frozenset({"snare", "clap", "hat", "openhat", "perc"}): "Drums (no kick)"},
+    envelopes={
+        "808": dict(attack=100, hold=100, decay=30000, sustain=128, release=12000),
+        "pad": dict(attack=100, hold=100, decay=30000, sustain=128, release=30000),
+    },
+    mono={"808"},              # the reference 808 jumps between notes, so no Porta
+    porta=set(),
+    cut_group={"hat", "openhat"},
+    mix_bus={"clap": "snare", "hat": "hats", "openhat": "hats"},   # parts sharing a bus in MIX
+    samples=fl_samples,
+)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--stems", action="store_true", help="also write one audio file per part")

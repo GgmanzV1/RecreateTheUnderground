@@ -39,6 +39,16 @@ def tempo(perc):
     bpms = np.arange(80, 180, 0.05)
     score = [at(240 / b * fps) + 0.5 * at(60 / b * fps) + 0.5 * at(120 / b * fps) for b in bpms]
     best = float(bpms[int(np.argmax(score))])
+    # A 2-bar loop can look like one slow bar. If the hats pulse just as strongly at
+    # double the tempo, the song is really at the faster tempo (e.g. 162, not 81).
+    if best * 2 <= 200:
+        hats = signal.sosfiltfilt(signal.butter(4, 7000, "highpass", fs=SR, output="sos"), perc)
+        hat_env = librosa.onset.onset_strength(y=hats, sr=SR, hop_length=hop)
+        hac = librosa.autocorrelate(hat_env)
+        hac /= hac[0]
+        beat = lambda b: max(hac[int(round(60 / b * fps)) + d] for d in (-1, 0, 1))  # noqa: E731
+        if beat(best * 2) >= 0.9 * beat(best):
+            best *= 2
     return best, env, hop
 
 

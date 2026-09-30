@@ -1,6 +1,6 @@
 # Nettspend – "Winnie Harlow": what's under the hood
 
-Measured from the WAV you uploaded (2:17, 44.1 kHz stereo) with `analyze_reference.py` and the deeper
+Measured from the WAV you uploaded (2:17, 44.1 kHz stereo) with [`../tools/analyze_reference.py`](../tools/analyze_reference.py) and the deeper
 measurements behind the full study in [`../reports/Winnie Harlow production study.md`](../reports/Winnie%20Harlow%20production%20study.md).
 Nothing here copies the song's melodies, lyrics or note-by-note parts. It's the framework and the sound targets.
 
@@ -89,5 +89,5 @@ Glasshouse keeps its own chords, melody and drum patterns. Its sound and mix are
    - Band-pass 1–2 kHz → the clap. Count where it lands in the bar.
 3. Loop 4 bars (select them in the Playlist timeline) and play along on the piano roll's preview keyboard until your notes match.
 4. Use a tuner plugin on the low-passed track to confirm the 808 notes. Remember the song is +15 cents sharp.
-5. For a second opinion, run `python3 analyze_reference.py song.wav` on any track you own. It prints the tempo,
+5. For a second opinion, run `python3 tools/analyze_reference.py song.wav` on any track you own. It prints the tempo,
    where bar 1 starts, the key, the 808's notes, an averaged drum grid and an energy map.

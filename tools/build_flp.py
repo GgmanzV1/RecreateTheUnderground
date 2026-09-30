@@ -1,115 +1,68 @@
 #!/usr/bin/env python3
-"""Build Glasshouse as an FL Studio project: fl_project/Glasshouse.flp plus its samples.
+"""Build a beat script's song as an FL Studio project, plus one sample per channel.
 
-The notes and arrangement come from build_beat.py, so the project plays the same
-parts as the MIDI files. Every channel is a Sampler loaded with a one-shot rendered
-from the same synthesis as the preview, so it plays with no third-party plugins.
+  python3 tools/build_flp.py winnie-harlow-study/build_beat.py
+  -> winnie-harlow-study/fl_project/<Name>.flp and <Name> <channel>.wav
+
+The beat script supplies the notes (loop_patterns, arrange, SECTIONS, MUTES, EXTRAS,
+LOOP_BARS, SONG_BARS, BPM, STEP, SR, MIX, rms_db) and an FL_PROJECT dict describing the
+project: name, genre, comment, channels [(part, channel name, sample root note)], playlist
+groups [(track, pattern, parts)], fx_track, variants, envelopes, mono/porta/cut_group
+parts, mix_bus and a samples() function returning one audio array per part. Every channel
+is a Sampler loaded with that part's sample, so the project needs no third-party plugins.
 
 FL Studio's .flp format has no public spec. This file writes it by copying events
-out of two files FL Studio 20.8.4 saved itself (fl_template/) and filling in
-Glasshouse's channels, patterns, playlist and mixer names. Event IDs and layouts
-follow PyFLP (https://github.com/demberto/PyFLP).
-
-Outputs (next to this file):
-  fl_project/Glasshouse.flp
-  fl_project/Glasshouse <part>.wav   one sample per channel, keep them next to the .flp
+out of two files FL Studio 20.8.4 saved itself (fl_template/) and filling in the
+channels, patterns, playlist and mixer names. Event IDs and layouts follow PyFLP
+(https://github.com/demberto/PyFLP).
 
 Usage:
-  pip install numpy scipy soundfile mido
-  python3 build_flp.py
+  pip install numpy scipy soundfile mido pyloudnorm
+  python3 tools/build_flp.py <study>/build_beat.py
 """
+import importlib.util
 import struct
+import sys
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
 
-import build_beat as bb
-
-HERE = Path(__file__).resolve().parent
-TEMPLATE = HERE / "fl_template"
-OUT = HERE / "fl_project"
-SR = bb.SR
+TEMPLATE = Path(__file__).resolve().parent / "fl_template"
 PPQ = 96
 TICKS_PER_STEP = PPQ // 4
 BAR = 16 * TICKS_PER_STEP
 
-# (part in build_beat, channel name, sample root note). FL names MIDI 60 "C5".
-CHANNELS = [
-    ("kick", "Kick", 60),
-    ("808", "808", 36),
-    ("snare", "Snare", 60),
-    ("clap", "Clap", 60),
-    ("hat", "Hat", 60),
-    ("openhat", "Open Hat", 60),
-    ("perc", "Rim", 60),
-    ("pad", "Pad", 60),
-    ("lead", "Bell Lead", 69),
-    ("arp", "Glass Arp", 72),
-    ("fx", "Zap", 60),
-]
-CH = {part: i for i, (part, _, _) in enumerate(CHANNELS)}
-CHANNELS_BY_PART = [(part, name) for part, name, _ in CHANNELS]
-ROOT = {part: root for part, _, root in CHANNELS}
-MIX_BUS = {"clap": "snare", "hat": "hats", "openhat": "hats"}   # parts sharing a bus in build_beat.MIX
 
-# Playlist tracks: (track name, pattern name, parts). One 8-bar pattern each.
-GROUPS = [
-    ("Drums", "Drums", ["kick", "snare", "clap", "hat", "openhat", "perc"]),
-    ("808", "808", ["808"]),
-    ("Chords", "Chords", ["pad"]),
-    ("Lead", "Lead", ["lead"]),
-    ("Arp", "Arp", ["arp"]),
-]
-FX_TRACK = "FX"
-VARIANT_NAMES = {frozenset({"snare", "clap", "hat", "openhat", "perc"}): "Drums (no kick)"}
+def configure(beat_path):
+    """Load the beat script and expose its FL_PROJECT settings as this module's globals."""
+    global bb, FL, SR, OUT, CHANNELS, CH, CHANNELS_BY_PART, ROOT, MIX_BUS, GROUPS, FX_TRACK
+    global VARIANT_NAMES, ENVELOPES, CUT_PARTS
+    beat_path = Path(beat_path).resolve()
+    sys.path.insert(0, str(beat_path.parent))
+    spec = importlib.util.spec_from_file_location(beat_path.stem, beat_path)
+    bb = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bb)
+    FL = bb.FL_PROJECT
+    SR = bb.SR
+    OUT = beat_path.parent / "fl_project"
+    CHANNELS = FL["channels"]
+    CH = {part: i for i, (part, _, _) in enumerate(CHANNELS)}
+    CHANNELS_BY_PART = [(part, name) for part, name, _ in CHANNELS]
+    ROOT = {part: root for part, _, root in CHANNELS}
+    MIX_BUS = FL.get("mix_bus", {})
+    GROUPS = FL["groups"]
+    FX_TRACK = FL.get("fx_track", "FX")
+    VARIANT_NAMES = FL.get("variants", {})
+    # Sampler volume envelope for parts whose sound must stop when the note ends.
+    # Without it FL's Sampler plays the whole sample regardless of note length.
+    # Values are FL's raw knob values: times 100-65536, sustain 0-128.
+    ENVELOPES = FL.get("envelopes", {})
+    CUT_PARTS = set(FL.get("mono", ())) | set(FL.get("cut_group", ()))
 
-# Sampler volume envelope for parts whose sound must stop when the note ends.
-# Without it FL's Sampler plays the whole sample regardless of note length.
-# Values are FL's raw knob values: times 100-65536, sustain 0-128.
-ENVELOPES = {
-    "808": dict(attack=100, hold=100, decay=30000, sustain=128, release=12000),
-    "pad": dict(attack=100, hold=100, decay=30000, sustain=128, release=30000),
-}
-
-
-# ---------------------------------------------------------------------------
-# Samples
-# ---------------------------------------------------------------------------
 
 def stereo(x):
     return np.stack([x, x], axis=1) if x.ndim == 1 else x
-
-
-def padded(x, seconds):
-    return np.concatenate([stereo(x), np.zeros((int(seconds * SR), 2))])
-
-
-def fade_out(x, seconds=0.05):
-    n = int(seconds * SR)
-    x = x.copy()
-    x[-n:] *= np.linspace(1, 0, n)[:, None] if x.ndim == 2 else np.linspace(1, 0, n)
-    return x
-
-
-def render_samples():
-    """Dry, mono drums; the melodic layers and FX keep the short room build_beat gives them."""
-    lead = bb.filt(bb.wide_bell(bb.hz(ROOT["lead"]), 127), "highpass", 200)
-    arp = bb.filt(stereo(bb.glass(bb.hz(ROOT["arp"]), 127)), "highpass", 500)
-    pad = bb.filt(bb.pad_note(ROOT["pad"], 8.0, 127), "lowpass", 4000)
-    return {
-        "kick": bb.kick(127),
-        "808": fade_out(bb.one_808(ROOT["808"])),
-        "snare": bb.snare(127),
-        "clap": 0.8 * bb.clap(127),
-        "hat": bb.HAT,
-        "openhat": bb.OPEN_HAT,
-        "perc": bb.rim(127),
-        "pad": fade_out(bb.reverb(padded(pad, 0.5), 0.35)),
-        "lead": fade_out(bb.reverb(padded(lead, 1.0), 0.4)),
-        "arp": fade_out(bb.reverb(padded(arp, 1.0), 0.4)),
-        "fx": fade_out(bb.reverb(padded(bb.zap(127), 1.0), 0.3)),
-    }
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +82,7 @@ def play(song, samples):
             stop = len(y)
             if part in ENVELOPES:
                 stop = int(n.length * bb.STEP * SR) + int(0.15 * SR)
-            if part in ("808", "hat", "openhat") and k + 1 < len(notes):
+            if part in CUT_PARTS and k + 1 < len(notes):
                 stop = min(stop, starts[k + 1] - starts[k])   # mono / cut group
             y = y[:max(stop, 1)] * n.vel / 127
             i = starts[k]
@@ -234,11 +187,12 @@ def channel_block(iid, part, name, sampler, wrapper):
         elif eid == 22:
             data = u8(iid + 1)                    # mixer insert
         elif eid == 196:
-            data = text(f"Glasshouse {name}.wav")  # FL finds it next to the .flp or in a search folder
-        elif eid == 221 and part == "808":
-            data = struct.pack("<IIB", 0, 500, 1)  # Mono: each note cuts the last, no glide
-        elif eid == 132 and part in ("hat", "openhat"):
-            data = struct.pack("<HH", 1, 1)        # cut group 1: the closed hat chokes the open hat
+            data = text(f"{FL['name']} {name}.wav")  # FL finds it next to the .flp or in a search folder
+        elif eid == 221 and part in FL.get("mono", ()):
+            # Mono: each note cuts the last. Porta adds FL's glide between overlapping notes.
+            data = struct.pack("<IIB", 0, FL.get("slide", 500), 1 | (2 if part in FL.get("porta", ()) else 0))
+        elif eid == 132 and part in FL.get("cut_group", ()):
+            data = struct.pack("<HH", 1, 1)        # cut group 1: e.g. the closed hat chokes the open hat
         events.append((eid, data))
         if eid == 145:
             events.append((32, u8(0)))            # "locked" flag, present in project files
@@ -351,13 +305,11 @@ def build_flp(patterns, clips):
 
     first_pattern = [e for e, _ in project].index(65)
     header = project[:first_pattern]
-    header = replace_event(header, 156, u32(bb.BPM * 1000))
+    header = replace_event(header, 156, u32(round(bb.BPM * 1000)))
     header = replace_event(header, 67, u16(1))
-    header = replace_event(header, 194, text("Glasshouse"))
-    header = replace_event(header, 206, text("Underground rap"))
-    header = replace_event(header, 195, text(
-        "Glasshouse: an original 140 BPM beat from the Winnie Harlow style study. "
-        "Keep the Glasshouse *.wav samples in the same folder as this project."))
+    header = replace_event(header, 194, text(FL["name"]))
+    header = replace_event(header, 206, text(FL["genre"]))
+    header = replace_event(header, 195, text(FL["comment"]))
     controllers = [(e, d) for e, d in project if e == 226]
 
     events = list(header)
@@ -372,7 +324,7 @@ def build_flp(patterns, clips):
     for block in blocks[1:]:
         events += block
 
-    tracks = [name for name, _, _ in GROUPS] + [FX_TRACK]
+    tracks = [name for name, _, _ in GROUPS] + ([FX_TRACK] if bb.EXTRAS else [])
     events += [(99, u16(0)), (241, text("Arrangement")), (36, u8(0)), playlist_event(clips, patterns)]
     for i, data in enumerate(d for e, d in project if e == 238):
         events.append((238, data))
@@ -394,6 +346,9 @@ def build_flp(patterns, clips):
 
 
 def main():
+    if len(sys.argv) != 2:
+        sys.exit(__doc__)
+    configure(sys.argv[1])
     loops = bb.loop_patterns()
     song = bb.arrange(loops)
     patterns, clips = build_arrangement(loops)
@@ -404,11 +359,12 @@ def main():
     assert got == want, [p for p in CH if got[p] != want[p]]
 
     OUT.mkdir(exist_ok=True)
-    samples = set_levels(song, render_samples())
+    samples = set_levels(song, FL["samples"]())
     for part, name, _ in CHANNELS:
-        sf.write(OUT / f"Glasshouse {name}.wav", samples[part], SR, subtype="PCM_24")
-    (OUT / "Glasshouse.flp").write_bytes(build_flp(patterns, clips))
-    print(f"wrote {OUT / 'Glasshouse.flp'}: {len(CHANNELS)} channels, {len(patterns)} patterns, "
+        sf.write(OUT / f"{FL['name']} {name}.wav", samples[part], SR, subtype="PCM_24")
+    flp = OUT / f"{FL['name']}.flp"
+    flp.write_bytes(build_flp(patterns, clips))
+    print(f"wrote {flp}: {len(CHANNELS)} channels, {len(patterns)} patterns, "
           f"{len(clips)} playlist clips, plus {len(CHANNELS)} samples")
 
 

@@ -33,7 +33,7 @@ Not included, because it depends on plugin settings: the master chain (section 8
 the project will sound quieter until you add it. Swapping the samples for your own sounds (drag a new WAV onto a
 channel) is the fastest way to make it yours.
 
-It was built for **FL Studio 20.8 or newer** by `build_flp.py`, not saved from FL itself, so if your FL
+It was built for **FL Studio 20.8 or newer** by [`tools/build_flp.py`](../tools/build_flp.py), not saved from FL itself, so if your FL
 won't open it, use the MIDI route below and let me know what error you got.
 
 ## 0. Project setup
