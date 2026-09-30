@@ -11,6 +11,7 @@ The full research (credits, release history, ok's toolkit, the style's playbook,
 |---|---|
 | [`ANALYSIS.md`](ANALYSIS.md) | The short version: tempo, key, tuning, loudness, stereo, what each sound measures as, the arrangement, and how Glasshouse compares |
 | [`REMAKE_IT_YOURSELF.md`](REMAKE_IT_YOURSELF.md) | How to remake the song by ear in FL, one layer at a time: stem separation, finding 808 notes on the spectrum, Basic Pitch for melody drafts, A/B testing, with the measured numbers as checkpoints |
+| `remake_kit/Winnie Harlow Remake Kit.flp` | **Empty remake kit**: the song's tempo, +15-cent tuning, matched sounds, 808 settings and markers, ready for your notes. Built by `remake_kit.py` |
 | [`FL_GUIDE.md`](FL_GUIDE.md) | Step by step: sounds, plugin settings, glides, hat rolls, sidechain, arrangement, mix |
 | `fl_project/Glasshouse.flp` | **The FL Studio project**: all channels, patterns and the full arrangement, with its samples next to it. Setup is in [`FL_GUIDE.md`](FL_GUIDE.md#shortcut-open-the-ready-made-project) |
 | `audio/glasshouse_preview.mp3` | Rendered, mastered preview (1:38) |

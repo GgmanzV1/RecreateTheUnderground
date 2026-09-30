@@ -8,6 +8,7 @@ The chords, melody, drums and 808 line are new. Nothing from the song itself (au
 |---|---|
 | [`ANALYSIS.md`](ANALYSIS.md) | The measurements: 162 BPM with the snare on 3, D major / B minor, +35 cents, a clean sliding 808, straight-8th drums, the melody's filter trick, the 4-bar-block arrangement, and how Overexposed compares |
 | [`REMAKE_IT_YOURSELF.md`](REMAKE_IT_YOURSELF.md) | How to pull the song's own notes out by ear in FL: tuning to +35 cents, reading the 808 off the spectrum, transcribing the melody from a breakdown, with measured checkpoints |
+| `remake_kit/Fkd It Up Remake Kit.flp` | **Empty remake kit**: 162 BPM, +35-cent tuning, matched sounds, 808 slide settings and 17 section markers, ready for your notes. Built by `remake_kit.py` |
 | [`HOW_ITS_MADE.md`](HOW_ITS_MADE.md) | **Start here.** Each layer of Overexposed with its sound, settings and FL steps, next to an audio file of that stage |
 | `audio/stages/*.mp3` | The build-up: dry synth → filter trick → drums → 808 without and with slides → full mix → mastered → hook into breakdown |
 | `audio/overexposed_preview.mp3` | The finished, mastered beat (1:37) |

@@ -7,6 +7,23 @@ checkpoints. Nothing here gives you the notes themselves. The checkpoints tell y
 **Order:** set up → line up the grid → split stems → 808 → melody → drums → sounds → A/B.
 This song is built on the 808, so start there, not with the drums.
 
+## Start from the remake kit
+
+`remake_kit/Fkd It Up Remake Kit.flp` is an empty FL project with everything except the notes already set:
+
+- **162 BPM** and FL's **master pitch at +35 cents**, so your notes line up with the song in time and in tune.
+- Channels with sounds built to the song's measured targets: Kick, **808** (clean, Mono + Porta with a short slide),
+  Snare, Clap, Hat and Open Hat (cut group), **Synth** (the open, swelling version) and **Synth (filtered)** (the
+  thinner version for wherever the 808 plays). Each has its own named mixer insert.
+- Empty patterns named **Drums**, **808**, **Synth** and **Synth (filtered)**, and a **Reference** track at the top.
+- **17 playlist markers** at every change the song makes: each 808 drop, each 808 + drum drop, each melody drop and
+  the outro. Use them to lay out your patterns once one 4-bar loop is right.
+
+To use it: keep the WAVs next to the `.flp`, add the folder under **Options → File settings → Browser extra search
+folders**, open the project, drag your copy of the song onto the Reference track and slide it about 0.1 s left.
+Then work through the steps and draw your notes into the empty patterns. Put the melody in **Synth** where a marker
+says the 808 is out, and in **Synth (filtered)** where it's in.
+
 ## What you need
 
 - FL Studio **Producer Edition or higher** for built-in stem separation.

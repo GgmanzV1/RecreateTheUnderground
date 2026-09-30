@@ -11,6 +11,11 @@ groups [(track, pattern, parts)], fx_track, variants, envelopes, mono/porta/cut_
 parts, mix_bus and a samples() function returning one audio array per part. Every channel
 is a Sampler loaded with that part's sample, so the project needs no third-party plugins.
 
+With kit=True in FL_PROJECT the script only needs SR, BPM and FL_PROJECT, and writes an
+empty remake kit instead: the channels and sounds, one empty pattern per group, playlist
+markers (FL_PROJECT["markers"], 1-based bars), the master pitch in cents
+(FL_PROJECT["master_pitch"]) and each sample at the peak level in FL_PROJECT["levels"].
+
 FL Studio's .flp format has no public spec. This file writes it by copying events
 out of two files FL Studio 20.8.4 saved itself (fl_template/) and filling in the
 channels, patterns, playlist and mixer names. Event IDs and layouts follow PyFLP
@@ -45,7 +50,7 @@ def configure(beat_path):
     spec.loader.exec_module(bb)
     FL = bb.FL_PROJECT
     SR = bb.SR
-    OUT = beat_path.parent / "fl_project"
+    OUT = beat_path.parent / FL.get("out_dir", "fl_project")
     CHANNELS = FL["channels"]
     CH = {part: i for i, (part, _, _) in enumerate(CHANNELS)}
     CHANNELS_BY_PART = [(part, name) for part, name, _ in CHANNELS]
@@ -310,11 +315,12 @@ def build_flp(patterns, clips):
     header = replace_event(header, 194, text(FL["name"]))
     header = replace_event(header, 206, text(FL["genre"]))
     header = replace_event(header, 195, text(FL["comment"]))
+    header = replace_event(header, 80, struct.pack("<h", FL.get("master_pitch", 0)))   # cents
     controllers = [(e, d) for e, d in project if e == 226]
 
     events = list(header)
     for i, (_, notes) in enumerate(patterns):
-        events += [(65, u16(i + 1)), notes_event(notes)]
+        events += [(65, u16(i + 1))] + ([notes_event(notes)] if notes else [])
         if i == 0:
             events += controllers
     blocks = [channel_block(i, part, name, sampler, wrapper) for i, (part, name, _) in enumerate(CHANNELS)]
@@ -324,8 +330,10 @@ def build_flp(patterns, clips):
     for block in blocks[1:]:
         events += block
 
-    tracks = [name for name, _, _ in GROUPS] + ([FX_TRACK] if bb.EXTRAS else [])
+    tracks = [name for name, _, _ in GROUPS] + ([FX_TRACK] if getattr(bb, "EXTRAS", None) else [])
     events += [(99, u16(0)), (241, text("Arrangement")), (36, u8(0)), playlist_event(clips, patterns)]
+    for bar, name in FL.get("markers", []):
+        events += [(148, u32((bar - 1) * BAR)), (33, u8(4)), (34, u8(4)), (205, text(name))]
     for i, data in enumerate(d for e, d in project if e == 238):
         events.append((238, data))
         if i < len(tracks):
@@ -345,10 +353,27 @@ def build_flp(patterns, clips):
     return head + b"FLdt" + u32(len(body)) + body
 
 
+def build_kit():
+    """An empty project to fill in by ear: sounds, settings, named patterns and markers."""
+    patterns = [(pname, []) for _, pname, parts in GROUPS if parts]
+    OUT.mkdir(exist_ok=True)
+    samples = FL["samples"]()
+    for part, name, _ in CHANNELS:
+        x = stereo(samples[part])
+        x = x / np.abs(x).max() * 10 ** (FL["levels"][part] / 20)
+        sf.write(OUT / f"{FL['name']} {name}.wav", x, SR, subtype="PCM_24")
+    flp = OUT / f"{FL['name']}.flp"
+    flp.write_bytes(build_flp(patterns, []))
+    print(f"wrote {flp}: {len(CHANNELS)} channels, {len(patterns)} empty patterns, "
+          f"{len(FL.get('markers', []))} markers, master pitch {FL.get('master_pitch', 0):+d} cents")
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     configure(sys.argv[1])
+    if FL.get("kit"):
+        return build_kit()
     loops = bb.loop_patterns()
     song = bb.arrange(loops)
     patterns, clips = build_arrangement(loops)

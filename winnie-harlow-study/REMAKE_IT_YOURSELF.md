@@ -8,6 +8,20 @@ makes the next remake faster. Your first one will be slow, and that's normal.
 **Order:** set up → line up the grid → split stems → snare → kick → 808 → melody → hats → sounds → A/B.
 Don't skip ahead. Every layer is easier once the one before it is locked.
 
+## Start from the remake kit
+
+`remake_kit/Winnie Harlow Remake Kit.flp` is an empty FL project with everything except the notes already set:
+
+- **140.10 BPM** and FL's **master pitch at +15 cents**, so your notes line up with the song in time and in tune.
+- Channels with sounds built to the song's measured targets: Kick, **808** (flat, saturated, Mono on, Porta off),
+  Clap, Hat and Open Hat (cut group), and **Melody** (a soft, wide chord synth). Each has its own named mixer insert.
+- Empty patterns named **Drums**, **808** and **Melody**, and a **Reference** track at the top of the playlist.
+- Playlist markers where the song changes (it's one 4-bar loop; the markers follow the vocal).
+
+To use it: keep the WAVs next to the `.flp`, add the folder under **Options → File settings → Browser extra search
+folders**, open the project, drag your copy of the song onto the Reference track at bar 2 and slide it 0.375 s left
+(step 2 below). Then work through the steps and draw your notes into the empty patterns.
+
 ## What you need
 
 - FL Studio **Producer Edition or higher** for built-in stem separation. On Fruity Edition, use the
